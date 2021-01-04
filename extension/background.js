@@ -31,6 +31,12 @@ async function getAllTabs() {
   });
 }
 
+async function getTabById(id) {
+  return new Promise(function (resolve, reject) {
+    chrome.tabs.get(id, resolve);
+  })
+}
+
 const procs = {};
 
 async function initTabProc(tab) {
@@ -103,6 +109,11 @@ async function main() {
       await processTab(tab);
     }
   }, TICK);
+  
+  chrome.tabs.onActivated.addListener(async ({tabId}) => {
+    const tab = await getTabById(tabId);
+    processTab(tab);
+  });
 }
 
 main();
