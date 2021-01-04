@@ -37,7 +37,6 @@ function initTabProc(tab) {
   procs[tab.id] = {
     idleTime: 0,
   };
-  console.log("initialized tab");
 }
 
 function isTabActive(tab) {
@@ -49,7 +48,6 @@ function isTabActive(tab) {
 
 function makeTabAlive(tab) {
   procs[tab.id].idleTime = 0;
-  console.log("tab is alive! ", tab);
 }
 
 async function killTab(tab) {
@@ -61,7 +59,6 @@ async function killTab(tab) {
 async function killTabALittle(tab) {
   const proc = procs[tab.id];
   proc.idleTime += TICK;
-  console.log(`tab is dying`, tab);
   if (proc.idleTime > MAX_TAB_LIFE) {
     await killTab(tab);
   }
@@ -70,7 +67,7 @@ async function killTabALittle(tab) {
 async function processTab(tab) {
   if (!procs[tab.id]) {
     initTabProc(tab);
-    continue;
+    return;
   }
 
   if (isTabActive(tab)) {
