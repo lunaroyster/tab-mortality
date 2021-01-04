@@ -34,7 +34,7 @@ async function getAllTabs() {
 async function getTabById(id) {
   return new Promise(function (resolve, reject) {
     chrome.tabs.get(id, resolve);
-  })
+  });
 }
 
 const procs = {};
@@ -51,15 +51,15 @@ async function initTabProc(tab) {
 
 async function getExcludedDomains() {
   return new Promise((resolve, reject) => {
-    chrome.storage.sync.get('exclude', (obj) => resolve(obj['exclude']));
-  })
+    chrome.storage.sync.get("exclude", (obj) => resolve(obj["exclude"]));
+  });
 }
 
 async function excludeDomain(domain) {
   const excludedDomains = await getExcludedDomains();
   return new Promise((resolve, reject) => {
-    chrome.storage.sync.set({exclude: [...excludedDomains, domain]}, resolve);
-  })
+    chrome.storage.sync.set({ exclude: [...excludedDomains, domain] }, resolve);
+  });
 }
 
 function isTabActive(tab) {
@@ -109,8 +109,8 @@ async function main() {
       await processTab(tab);
     }
   }, TICK);
-  
-  chrome.tabs.onActivated.addListener(async ({tabId}) => {
+
+  chrome.tabs.onActivated.addListener(async ({ tabId }) => {
     const tab = await getTabById(tabId);
     processTab(tab);
   });
