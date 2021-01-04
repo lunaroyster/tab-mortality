@@ -5,7 +5,7 @@ console.log("bye tabs");
 
 const TICK = 5000;
 
-const MAX_TAB_LIFE = 300000;
+const MAX_TAB_LIFE = 120000;
 
 async function getWindows() {
   return new Promise(function (resolve, reject) {
