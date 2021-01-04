@@ -1,4 +1,4 @@
-# Tab Mortality
+# Tab Mortality ☠
 
 Tab Mortality is a browser extension that limits the lifespan of tabs. Lingering tabs are closed to preseve your attention.
 
