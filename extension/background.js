@@ -1,4 +1,5 @@
-const flat = arr => arr.reduce((a, b) => Array.isArray(b) ? [...a, ...flat(b)] : [...a, b], []);
+const flat = (arr) =>
+  arr.reduce((a, b) => (Array.isArray(b) ? [...a, ...flat(b)] : [...a, b]), []);
 
 console.log("bye tabs");
 
@@ -7,27 +8,27 @@ const TICK = 5000;
 const MAX_TAB_LIFE = 300000;
 
 async function getWindows() {
-  return new Promise(function(resolve, reject) {
-    chrome.windows.getAll(windows => {
+  return new Promise(function (resolve, reject) {
+    chrome.windows.getAll((windows) => {
       resolve(windows);
-    })
-  })
+    });
+  });
 }
 
 async function getTabsByWindow(windowId) {
-  return new Promise(function(resolve, reject) {
-    chrome.tabs.getAllInWindow(windowId, tabs => {
+  return new Promise(function (resolve, reject) {
+    chrome.tabs.getAllInWindow(windowId, (tabs) => {
       resolve(tabs);
-    })
-  })
+    });
+  });
 }
 
 async function getAllTabs() {
-  return new Promise(async function(resolve, reject) {
+  return new Promise(async function (resolve, reject) {
     const windows = await getWindows();
-    const proms = await Promise.all(windows.map(w => getTabsByWindow(w.id)));
+    const proms = await Promise.all(windows.map((w) => getTabsByWindow(w.id)));
     resolve(flat(proms));
-  })
+  });
 }
 
 const procs = {};
@@ -35,7 +36,7 @@ const procs = {};
 function initTabProc(tab) {
   procs[tab.id] = {
     idleTime: 0,
-  }
+  };
   console.log("initialized tab");
 }
 
@@ -54,7 +55,7 @@ function makeTabAlive(tab) {
 async function killTab(tab) {
   return new Promise((resolve, reject) => {
     chrome.tabs.remove(tab.id, () => resolve());
-  })
+  });
 }
 
 async function killTabALittle(tab) {
@@ -85,7 +86,7 @@ async function main() {
     for (let tab of tabs) {
       await processTab(tab);
     }
-  }, TICK)
+  }, TICK);
 }
 
 main();

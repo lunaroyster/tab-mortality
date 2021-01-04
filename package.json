@@ -1,0 +1,20 @@
+{
+  "name": "tab-mortality",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "npx prettier --write ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lunaroyster/tab-mortality.git"
+  },
+  "author": "lunaroyster",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lunaroyster/tab-mortality/issues"
+  },
+  "homepage": "https://github.com/lunaroyster/tab-mortality#readme"
+}
