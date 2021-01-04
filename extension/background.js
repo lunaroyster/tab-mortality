@@ -33,16 +33,35 @@ async function getAllTabs() {
 
 const procs = {};
 
-function initTabProc(tab) {
+async function initTabProc(tab) {
+  const excludedDomains = await getExcludedDomains();
+  const u = new URL(tab.url);
+  const isExcluded = excludedDomains.indexOf(u.host) !== -1;
   procs[tab.id] = {
     idleTime: 0,
+    isExcluded,
   };
+}
+
+async function getExcludedDomains() {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get('exclude', (obj) => resolve(obj['exclude']));
+  })
+}
+
+async function excludeDomain(domain) {
+  const excludedDomains = await getExcludedDomains();
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.set({exclude: [...excludedDomains, domain]}, resolve);
+  })
 }
 
 function isTabActive(tab) {
   if (tab.active) return true;
   if (tab.audible) return true;
   if (tab.pinned) return true;
+  if (procs[tab.id].isExcluded) return true;
+
   return false;
 }
 
@@ -66,7 +85,7 @@ async function killTabALittle(tab) {
 
 async function processTab(tab) {
   if (!procs[tab.id]) {
-    initTabProc(tab);
+    await initTabProc(tab);
     return;
   }
 
