@@ -9,3 +9,5 @@ This returns control to YOU. No longer do open tabs dictate what to focus on.
 - [ ] Exception list (tabs that should always stay open)
 - [ ] 'App mode' where certain domains are limited to a single open tab. (Looking at you, Amazon)
 - [ ] UI to explore and export closed tabs to apps like Roam, Evernote.
+
+<img src="screenshots/screenshot1.png" width="800" />
