@@ -59,7 +59,7 @@ async function initTabProc(tab) {
 
 async function getExcludedDomains() {
   return new Promise((resolve, reject) => {
-    chrome.storage.sync.get("exclude", (obj) => resolve(obj["exclude"]));
+    chrome.storage.sync.get("exclude", (obj) => resolve(obj["exclude"] || []));
   });
 }
 
