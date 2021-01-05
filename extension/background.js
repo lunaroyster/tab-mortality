@@ -41,8 +41,15 @@ const procs = {};
 
 async function initTabProc(tab) {
   const excludedDomains = await getExcludedDomains();
-  const u = new URL(tab.url);
-  const isExcluded = excludedDomains.indexOf(u.host) !== -1;
+  let isExcluded = false;
+  try {
+    const u =
+      tab.status === "loading" ? new URL(tab.pendingUrl) : new URL(tab.url);
+    isExcluded = excludedDomains.indexOf(u.host) !== -1;
+  } catch (e) {
+    console.log(`Failed to parse URL: ${tab.url} on `, tab);
+    console.log(e);
+  }
   procs[tab.id] = {
     idleTime: 0,
     isExcluded,
@@ -102,12 +109,20 @@ async function processTab(tab) {
   }
 }
 
+function clearRemovedTabs(tabs) {
+  const tabIds = Object.fromEntries(tabs.map((t) => [t.id, true]));
+  for (let id in procs) {
+    if (!tabIds[id]) delete procs[id];
+  }
+}
+
 async function main() {
   setInterval(async () => {
     const tabs = await getAllTabs();
     for (let tab of tabs) {
       await processTab(tab);
     }
+    clearRemovedTabs(tabs);
   }, TICK);
 
   chrome.tabs.onActivated.addListener(async ({ tabId }) => {
