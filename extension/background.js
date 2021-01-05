@@ -53,6 +53,7 @@ async function initTabProc(tab) {
   procs[tab.id] = {
     idleTime: 0,
     isExcluded,
+    tab,
   };
 }
 
@@ -116,19 +117,25 @@ function clearRemovedTabs(tabs) {
   }
 }
 
+async function processAllTabs() {
+  const tabs = await getAllTabs();
+  for (let tab of tabs) {
+    await processTab(tab);
+  }
+  clearRemovedTabs(tabs);
+}
+
 async function main() {
   setInterval(async () => {
-    const tabs = await getAllTabs();
-    for (let tab of tabs) {
-      await processTab(tab);
-    }
-    clearRemovedTabs(tabs);
+    processAllTabs();
   }, TICK);
 
   chrome.tabs.onActivated.addListener(async ({ tabId }) => {
     const tab = await getTabById(tabId);
     processTab(tab);
   });
+
+  await processAllTabs();
 }
 
 main();
