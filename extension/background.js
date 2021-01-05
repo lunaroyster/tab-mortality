@@ -71,10 +71,11 @@ async function excludeDomain(domain) {
 }
 
 function isTabActive(tab) {
-  if (tab.active) return true;
-  if (tab.audible) return true;
-  if (tab.pinned) return true;
-  if (procs[tab.id].isExcluded) return true;
+  if (tab.active) return true; // active tabs
+  if (tab.audible) return true; // tabs playing audio
+  if (tab.pinned) return true; // pinned tabs
+  if (tab.incognito) return true; // tabs in incognito mode
+  if (procs[tab.id].isExcluded) return true; // tabs we've already excluded (this reduces storage calls)
 
   return false;
 }
