@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/lunaroyster/tab-mortality/issues"
   },
-  "homepage": "https://github.com/lunaroyster/tab-mortality#readme"
+  "homepage": "https://github.com/lunaroyster/tab-mortality#readme",
+  "devDependencies": {
+    "bestzip": "^2.1.7"
+  }
 }
