@@ -68,7 +68,10 @@ async function excludeDomain(domain) {
   const res = await new Promise((resolve, reject) => {
     chrome.storage.sync.set({ exclude: [...excludedDomains, domain] }, resolve);
   });
-  delete procs; // TODO: we should only delete/update the specific tab here, especially if we increase MAX_TAB_LIFE
+  for (let id in procs) {
+    // TODO: we should only delete/update the specific tab here, especially if we increase MAX_TAB_LIFE
+    delete procs[id];
+  }
   return res;
 }
 
