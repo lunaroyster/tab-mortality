@@ -65,9 +65,11 @@ async function getExcludedDomains() {
 
 async function excludeDomain(domain) {
   const excludedDomains = await getExcludedDomains();
-  return new Promise((resolve, reject) => {
+  const res = await new Promise((resolve, reject) => {
     chrome.storage.sync.set({ exclude: [...excludedDomains, domain] }, resolve);
   });
+  delete procs; // TODO: we should only delete/update the specific tab here, especially if we increase MAX_TAB_LIFE
+  return res;
 }
 
 function isTabActive(tab) {
