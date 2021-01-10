@@ -7,6 +7,7 @@ const TICK = 1000;
 
 const MAX_TAB_LIFE = 120000;
 
+// Wrappers
 async function getWindows() {
   return new Promise(function (resolve, reject) {
     chrome.windows.getAll((windows) => {
@@ -37,6 +38,27 @@ async function getTabById(id) {
   });
 }
 
+// Excluded domains
+
+async function getExcludedDomains() {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get("exclude", (obj) => resolve(obj["exclude"] || []));
+  });
+}
+
+async function excludeDomain(domain) {
+  const excludedDomains = await getExcludedDomains();
+  const res = await new Promise((resolve, reject) => {
+    chrome.storage.sync.set({ exclude: [...excludedDomains, domain] }, resolve);
+  });
+  for (let id in procs) {
+    // TODO: we should only delete/update the specific tab here, especially if we increase MAX_TAB_LIFE
+    delete procs[id];
+  }
+  return res;
+}
+
+// Procs
 const procs = {};
 
 class Proc {
@@ -99,23 +121,7 @@ class Proc {
   }
 }
 
-async function getExcludedDomains() {
-  return new Promise((resolve, reject) => {
-    chrome.storage.sync.get("exclude", (obj) => resolve(obj["exclude"] || []));
-  });
-}
-
-async function excludeDomain(domain) {
-  const excludedDomains = await getExcludedDomains();
-  const res = await new Promise((resolve, reject) => {
-    chrome.storage.sync.set({ exclude: [...excludedDomains, domain] }, resolve);
-  });
-  for (let id in procs) {
-    // TODO: we should only delete/update the specific tab here, especially if we increase MAX_TAB_LIFE
-    delete procs[id];
-  }
-  return res;
-}
+// Main process
 
 async function processTab(tab) {
   if (!procs[tab.id]) {
