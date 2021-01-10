@@ -39,20 +39,23 @@ async function getTabById(id) {
 
 const procs = {};
 
-async function initTabProc(tab) {
+async function isTabExcluded(tab) {
   const excludedDomains = await getExcludedDomains();
   let isExcluded = false;
   try {
-    const u =
-      tab.status === "loading" ? new URL(tab.pendingUrl) : new URL(tab.url);
+    const u = tab.pendingUrl ? new URL(tab.pendingUrl) : new URL(tab.url);
     isExcluded = excludedDomains.indexOf(u.host) !== -1;
   } catch (e) {
     console.log(`Failed to parse URL: ${tab.url} on `, tab);
     console.log(e);
   }
+  return isExcluded;
+}
+
+async function initTabProc(tab) {
   procs[tab.id] = {
     idleTime: 0,
-    isExcluded,
+    isExcluded: await isTabExcluded(tab),
     tab,
   };
 }
@@ -89,6 +92,11 @@ function makeTabAlive(tab) {
   procs[tab.id].idleTime = 0;
 }
 
+async function updateProcTab(tab) {
+  procs[tab.id].tab = tab;
+  procs[tab.id].isExcluded = await isTabExcluded(tab);
+}
+
 async function killTab(tab) {
   return new Promise((resolve, reject) => {
     chrome.tabs.remove(tab.id, () => resolve());
@@ -108,6 +116,8 @@ async function processTab(tab) {
     await initTabProc(tab);
     return;
   }
+
+  await updateProcTab(tab);
 
   if (isTabActive(tab)) {
     makeTabAlive(tab);
@@ -139,6 +149,14 @@ async function main() {
   chrome.tabs.onActivated.addListener(async ({ tabId }) => {
     const tab = await getTabById(tabId);
     processTab(tab);
+  });
+
+  chrome.tabs.onUpdated.addListener(async (tabId, changes, tab) => {
+    processTab(tab);
+  });
+
+  chrome.tabs.onRemoved.addListener(async (tabId) => {
+    delete procs[tabId];
   });
 
   await processAllTabs();
