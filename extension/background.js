@@ -43,7 +43,7 @@ class Proc {
   constructor(tabId, tab) {
     this.id = tabId;
     this.idleTime = 0;
-    this.setTab(tab)
+    this.setTab(tab);
   }
   async setTab(tab) {
     this.tab = tab;
@@ -125,7 +125,7 @@ async function processTab(tab) {
   }
 
   const proc = procs[tab.id];
-  
+
   if (await proc.isActive()) {
     proc.makeAlive();
   } else {
