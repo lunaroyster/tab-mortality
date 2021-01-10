@@ -1,7 +1,7 @@
 const flat = (arr) =>
   arr.reduce((a, b) => (Array.isArray(b) ? [...a, ...flat(b)] : [...a, b]), []);
 
-console.log("bye tabs");
+console.log(`bye tabs! ${chrome.runtime.getManifest().version}`);
 
 const TICK = 1000;
 
