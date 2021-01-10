@@ -3,7 +3,7 @@ const flat = (arr) =>
 
 console.log("bye tabs");
 
-const TICK = 5000;
+const TICK = 1000;
 
 const MAX_TAB_LIFE = 120000;
 
@@ -39,25 +39,64 @@ async function getTabById(id) {
 
 const procs = {};
 
-async function isTabExcluded(tab) {
-  const excludedDomains = await getExcludedDomains();
-  let isExcluded = false;
-  try {
-    const u = tab.pendingUrl ? new URL(tab.pendingUrl) : new URL(tab.url);
-    isExcluded = excludedDomains.indexOf(u.host) !== -1;
-  } catch (e) {
-    console.log(`Failed to parse URL: ${tab.url} on `, tab);
-    console.log(e);
+class Proc {
+  constructor(tabId, tab) {
+    this.id = tabId;
+    this.idleTime = 0;
+    this.setTab(tab)
   }
-  return isExcluded;
-}
+  async setTab(tab) {
+    this.tab = tab;
+    this.isExcluded = await this.getIsExcluded();
+  }
+  async getTab() {
+    const tab = await getTabById(this.id);
+    this.tab = tab;
+    return tab;
+  }
+  async getIsExcluded() {
+    const tab = this.tab;
+    const excludedDomains = await getExcludedDomains();
+    let isExcluded = false;
+    try {
+      const u = tab.pendingUrl ? new URL(tab.pendingUrl) : new URL(tab.url);
+      isExcluded = excludedDomains.indexOf(u.host) !== -1;
+    } catch (e) {
+      console.log(`Failed to parse URL: ${tab.url} on `, tab);
+      console.log(e);
+    }
+    this.isExcluded = isExcluded;
+    return isExcluded;
+  }
+  async isActive() {
+    const tab = await this.getTab();
+    if (tab.active) return true; // active tabs
+    if (tab.audible) return true; // tabs playing audio
+    if (tab.pinned) return true; // pinned tabs
+    if (tab.incognito) return true; // tabs in incognito mode
+    if (this.isExcluded) return true; // tabs we've already excluded (this reduces storage calls)
 
-async function initTabProc(tab) {
-  procs[tab.id] = {
-    idleTime: 0,
-    isExcluded: await isTabExcluded(tab),
-    tab,
-  };
+    return false;
+  }
+  makeAlive() {
+    this.idleTime = 0;
+  }
+  async kill() {
+    return new Promise((resolve, reject) => {
+      chrome.tabs.remove(this.tab.id, () => resolve());
+    });
+  }
+  async killALittle() {
+    this.idleTime += TICK;
+    if (this.idleTime > MAX_TAB_LIFE) {
+      await this.kill();
+    }
+  }
+  static async from(tab) {
+    const proc = new Proc(tab.id, tab);
+    await proc.getIsExcluded();
+    return proc;
+  }
 }
 
 async function getExcludedDomains() {
@@ -78,58 +117,19 @@ async function excludeDomain(domain) {
   return res;
 }
 
-function isTabActive(tab) {
-  if (tab.active) return true; // active tabs
-  if (tab.audible) return true; // tabs playing audio
-  if (tab.pinned) return true; // pinned tabs
-  if (tab.incognito) return true; // tabs in incognito mode
-  if (procs[tab.id].isExcluded) return true; // tabs we've already excluded (this reduces storage calls)
-
-  return false;
-}
-
-function makeTabAlive(tab) {
-  procs[tab.id].idleTime = 0;
-}
-
-async function updateProcTab(tab) {
-  procs[tab.id].tab = tab;
-  procs[tab.id].isExcluded = await isTabExcluded(tab);
-}
-
-async function killTab(tab) {
-  return new Promise((resolve, reject) => {
-    chrome.tabs.remove(tab.id, () => resolve());
-  });
-}
-
-async function killTabALittle(tab) {
-  const proc = procs[tab.id];
-  proc.idleTime += TICK;
-  if (proc.idleTime > MAX_TAB_LIFE) {
-    await killTab(tab);
-  }
-}
-
 async function processTab(tab) {
   if (!procs[tab.id]) {
-    await initTabProc(tab);
+    const proc = await Proc.from(tab);
+    procs[tab.id] = proc;
     return;
   }
 
-  await updateProcTab(tab);
-
-  if (isTabActive(tab)) {
-    makeTabAlive(tab);
+  const proc = procs[tab.id];
+  
+  if (await proc.isActive()) {
+    proc.makeAlive();
   } else {
-    await killTabALittle(tab);
-  }
-}
-
-function clearRemovedTabs(tabs) {
-  const tabIds = Object.fromEntries(tabs.map((t) => [t.id, true]));
-  for (let id in procs) {
-    if (!tabIds[id]) delete procs[id];
+    proc.killALittle();
   }
 }
 
@@ -138,14 +138,9 @@ async function processAllTabs() {
   for (let tab of tabs) {
     await processTab(tab);
   }
-  clearRemovedTabs(tabs);
 }
 
 async function main() {
-  setInterval(async () => {
-    processAllTabs();
-  }, TICK);
-
   chrome.tabs.onActivated.addListener(async ({ tabId }) => {
     const tab = await getTabById(tabId);
     processTab(tab);
@@ -158,6 +153,10 @@ async function main() {
   chrome.tabs.onRemoved.addListener(async (tabId) => {
     delete procs[tabId];
   });
+
+  setInterval(async () => {
+    processAllTabs();
+  }, TICK);
 
   await processAllTabs();
 }
