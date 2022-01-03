@@ -4,6 +4,8 @@ Tab Mortality is a browser extension that limits the lifespan of tabs. Lingering
 
 This returns control to YOU. No longer do open tabs dictate what to focus on.
 
+![image](https://user-images.githubusercontent.com/22846928/147899639-6af6d79e-59ee-4b1b-8775-5e348e92c319.png)
+
 ## Things planned:
 
 - [ ] Exception list (tabs that should always stay open)
